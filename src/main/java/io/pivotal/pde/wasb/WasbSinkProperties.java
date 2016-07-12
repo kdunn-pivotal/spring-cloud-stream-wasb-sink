@@ -31,7 +31,7 @@ import org.springframework.integration.handler.LoggingHandler;
  * @author Kyle Dunn
  */
 @ConfigurationProperties
-public class WasbSinkApplicationProperties {
+public class WasbSinkProperties {
 
     /**
      * The name to use.

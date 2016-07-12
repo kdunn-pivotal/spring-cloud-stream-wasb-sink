@@ -20,10 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
@@ -41,21 +44,20 @@ import com.microsoft.azure.storage.blob.CloudBlockBlob;
  * @author Kyle Dunn
  */
 @EnableBinding(Sink.class)
-@EnableConfigurationProperties(WasbSinkApplicationProperties.class)
+@EnableConfigurationProperties(WasbSinkProperties.class)
+@SpringBootApplication
 public class WasbSink {
 
     protected static Logger LOG = LoggerFactory.getLogger(WasbSink.class);
 
     @Autowired
-    private WasbSinkApplicationProperties properties;
+    private WasbSinkProperties properties;
+
+    private CloudBlockBlob blobService;
 
     @Autowired
-    private CloudBlockBlob blob;
-
-    @Bean
-    public CloudBlockBlob getBlobService() {
-        CloudBlockBlob blobService;
-        
+    @DependsOn("WasbSinkProperties")
+    public void setBlobService() {
         // Define the connection-string with your values
         final String storageConnectionString =
             "DefaultEndpointsProtocol=" + this.properties.getDefaultEndpointsProtocol() +
@@ -98,26 +100,29 @@ public class WasbSink {
             }
 
             LOG.info("getBlobService() : using blob name {}", this.properties.getBlobName());
-            blobService = container.getBlockBlobReference(this.properties.getBlobName());
+            this.blobService = container.getBlockBlobReference(this.properties.getBlobName());
         } catch (Exception e) {
             // Log the stack trace.
-            LOG.error("getBlobService() : {}", e);
-            blobService = null;
+            LOG.error("getBlobService() : {}", e.getMessage());
+            //throw e;
         }
-        return blobService;
     }
 
     @ServiceActivator(inputChannel=Sink.INPUT)
     public void pushToWasb(Message<?> message) throws MessagingException {
         try {
             // Upload the payload to the blob
-            blob.uploadText(message.getPayload().toString());
+            blobService.uploadText(message.getPayload().toString());
 
         } catch (Exception e) {
             // Log the stack trace.
-            LOG.error("pushToWasb() : {}", e);
+            LOG.error("pushToWasb() : {}", e.getMessage());
         }
 
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(WasbSink.class, args);
     }
 
 }
