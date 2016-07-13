@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Sink;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
@@ -77,9 +76,7 @@ public class WasbSink {
             
             // Get a reference to a container
             // The container name must be lower case
-            // Append a random UUID to the end of the container name so that
-            // this sample can be run more than once in quick succession.
-            CloudBlobContainer container = blobClient.getContainerReference(this.properties.getContainerName());
+            CloudBlobContainer container = blobClient.getContainerReference(this.properties.getContainerName().toLowerCase());
 
             LOG.info("getBlobService() : using container {}", this.properties.getContainerName());
 
