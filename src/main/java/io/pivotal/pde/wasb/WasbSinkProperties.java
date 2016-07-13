@@ -40,17 +40,12 @@ public class WasbSinkProperties {
     private String name;
 
     /**
-     * A SpEL expression (against the incoming message) to evaluate as the logged message.
-     */
-    private String expression = "payload";
-
-    /**
      * The level at which to log messages.
      */
     private LoggingHandler.Level level = INFO;
 
     /**
-     * The default endpoint protocol.
+     * The default Azure endpoint protocol.
      */
     private String defaultEndpointsProtocol = "http";
 
@@ -83,6 +78,17 @@ public class WasbSinkProperties {
      * Create a container if it doesn't already exist.
      */
     private Boolean publicPermission = true;
+    
+    /**
+     * Specify if using an CloudAppendBlob
+     */
+    private Boolean appendOnly = true;
+
+    /**
+     * Specify whether to silently overwrite 
+     * existing an CloudAppendBlob with the same name
+     */
+    private Boolean overwriteExistingAppend;
 
     @NotBlank
     public String getName() {
@@ -91,15 +97,6 @@ public class WasbSinkProperties {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    @NotBlank
-    public String getExpression() {
-        return expression;
-    }
-
-    public void setExpression(String expression) {
-        this.expression = expression;
     }
 
     @NotNull
@@ -151,21 +148,37 @@ public class WasbSinkProperties {
         this.blobName = b;
     }
 
+    public Boolean getAutoCreateContainer() {
+        return autoCreateContainer;
+    }
+
     // Automatically create the container
     public void setAutoCreateContainer(Boolean b) {
         this.autoCreateContainer = b;
     }
 
-    public Boolean getAutoCreateContainer() {
-        return autoCreateContainer;
+    public Boolean getPublicPermission() {
+        return publicPermission;
     }
-   
+
     // Include public access in the permissions object 
     public void setPublicPermission(Boolean b) {
         this.publicPermission = b;
     }
 
-    public Boolean getPublicPermission() {
-        return publicPermission;
+    public Boolean getAppendOnly() {
+        return appendOnly;
+    }
+
+    public void setAppendOnly(Boolean appendOnly) {
+        this.appendOnly = appendOnly;
+    }
+
+    public Boolean getOverwiteExistingAppend() {
+        return overwriteExistingAppend;
+    }
+
+    public void setOverwriteExistingAppend(Boolean overwrite) {
+        this.overwriteExistingAppend = overwrite;
     }
 }

@@ -35,6 +35,8 @@ import org.springframework.messaging.MessagingException;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudAppendBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -53,7 +55,7 @@ public class WasbSink {
     @Autowired
     private WasbSinkProperties properties;
 
-    private CloudBlockBlob blobService;
+    private CloudBlob blobService;
 
     @Autowired
     @DependsOn("WasbSinkProperties")
@@ -100,7 +102,16 @@ public class WasbSink {
             }
 
             LOG.info("getBlobService() : using blob name {}", this.properties.getBlobName());
-            this.blobService = container.getBlockBlobReference(this.properties.getBlobName());
+            
+            if (this.properties.getAppendOnly()) {
+                this.blobService = container.getAppendBlobReference(this.properties.getBlobName());
+                if (this.properties.getOverwiteExistingAppend()) {
+                    ((CloudAppendBlob) blobService).createOrReplace();
+                }
+            }
+            else {
+                this.blobService = container.getBlockBlobReference(this.properties.getBlobName());
+            }
         } catch (Exception e) {
             // Log the stack trace.
             LOG.error("getBlobService() : {}", e.getMessage());
@@ -112,7 +123,12 @@ public class WasbSink {
     public void pushToWasb(Message<?> message) throws MessagingException {
         try {
             // Upload the payload to the blob
-            blobService.uploadText(message.getPayload().toString());
+            if (this.properties.getAppendOnly()) {
+                ((CloudAppendBlob) blobService).appendText(message.getPayload().toString() + "\n");
+            }
+            else {
+                ((CloudBlockBlob) blobService).uploadText(message.getPayload().toString());
+            }
 
         } catch (Exception e) {
             // Log the stack trace.
